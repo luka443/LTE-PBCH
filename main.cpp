@@ -26,7 +26,7 @@ int main() {
     int do_plots = 1; // 0/1 - wyświetlanie wykresów
 
     // Wczytanie danych z pliku .txt
-    std::ifstream inputFile("D:\\LTE-5G-C-\\LTE_TM3p1_10MZ_18p22dBFS.txt"); // Change directory!!
+    std::ifstream inputFile("Data/LTE_TM3p1_10MZ_18p22dBFS.txt"); // Change directory!!
     if (!inputFile) {
         std::cerr << "Blad wczytywania pliku." << std::endl;
         return 1;
