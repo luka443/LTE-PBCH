@@ -46,10 +46,16 @@ int main() {
     double THR = 15; // Parametry sygnału
     int REPEAT = 0;
 
-    // Obserwacja widma sygnału
-    if (do_plots) {
-        plot_freq(signal, fs);
+    int N = signal.size();
+    double df_lte ;
+    for (int i = 0; i < N-1; i++) {
+
+        signal[i] = signal[i] * std::exp(std::complex<double>(0, -2 * M_PI * i * 5 * df_lte / fs));
     }
+
+
+    // Obserwacja widma sygnału
+    plot_freq(signal, fs);
 
     // Tutaj można kontynuować przetwarzanie sygnału w języku C++
 
