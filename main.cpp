@@ -1,6 +1,7 @@
 //
 // Created by Łukasz on 20.01.2024.
 //
+#include <fftw3.h>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -9,10 +10,38 @@
 
 // Funkcja do obserwacji widma sygnału
 void plot_freq(const std::vector<std::complex<double>>& signal, double fs) {
-    // Tutaj można umieścić kod do analizy widma sygnału
-    // Na przykład wykorzystując bibliotekę FFT lub inny algorytm
+    int N = signal.size(); // Number of points in FFT
+    fftw_complex *in, *out; // Declare input and output arrays for FFTW
+    fftw_plan p;
 
-    // Przykład: Wypisanie próbek sygnału
+    // Allocate memory for input and output arrays
+    in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
+    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
+
+    // Copy signal into 'in' array
+    for (int i = 0; i < N; i++) {
+        in[i][0] = std::real(signal[i]); // Real part
+        in[i][1] = std::imag(signal[i]); // Imaginary part
+    }
+
+    // Create plan for FFT. Note that FFTW_FORWARD could be replaced with FFTW_BACKWARD for inverse FFT
+    p = fftw_plan_dft_1d(N, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
+
+    // Execute FFT
+    fftw_execute(p);
+
+    // Calculate magnitude spectrum and print it
+    for (int i = 0; i < N; i++) {
+        double mag = sqrt(out[i][0] * out[i][0] + out[i][1] * out[i][1]); // Magnitude of FFT output
+        double freq = i * fs / N; // Frequency bin
+        std::cout << "Frequency: " << freq << " Hz, Magnitude: " << mag << std::endl;
+    }
+
+    // Cleanup
+    fftw_destroy_plan(p);
+    fftw_free(in); 
+    fftw_free(out);
+
     for (const auto& sample : signal) {
         std::cout << "Real: " << std::real(sample) << " Imag: " << std::imag(sample) << std::endl;
     }
@@ -53,7 +82,7 @@ int main() {
         signal[i] = signal[i] * std::exp(std::complex<double>(0, -2 * M_PI * i * 5 * df_lte / fs));
     }
 
-
+    
     // Obserwacja widma sygnału
     plot_freq(signal, fs);
 
