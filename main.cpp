@@ -1,6 +1,7 @@
 //
 // Created by Łukasz on 20.01.2024.
 //
+#include "matplotlibcpp.h"
 #include <fftw3.h>
 #include <iostream>
 #include <fstream>
@@ -8,43 +9,61 @@
 #include <complex>
 #include <cmath>
 
-// Funkcja do obserwacji widma sygnału
-void plot_freq(const std::vector<std::complex<double>>& signal, double fs) {
-    int N = signal.size(); // Number of points in FFT
-    fftw_complex *in, *out; // Declare input and output arrays for FFTW
-    fftw_plan p;
+namespace plt = matplotlibcpp;
 
-    // Allocate memory for input and output arrays
+// Funkcja do obserwacji widma sygnału
+void plot_freq(const std::vector<std::complex<double>>& x, double fs) {
+    int N = x.size(); // Length of the signal
+
+    // Allocate input and output arrays for FFTW
+    fftw_complex *in, *out;
+    fftw_plan p;
     in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
     out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
 
-    // Copy signal into 'in' array
-    for (int i = 0; i < N; i++) {
-        in[i][0] = std::real(signal[i]); // Real part
-        in[i][1] = std::imag(signal[i]); // Imaginary part
+    // Copy our std::vector into the input array
+    for (int i = 0; i < N; ++i) {
+        in[i][0] = x[i].real();
+        in[i][1] = x[i].imag();
     }
 
-    // Create plan for FFT. Note that FFTW_FORWARD could be replaced with FFTW_BACKWARD for inverse FFT
+    // Create plan and execute FFT
     p = fftw_plan_dft_1d(N, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
-
-    // Execute FFT
     fftw_execute(p);
 
-    // Calculate magnitude spectrum and print it
-    for (int i = 0; i < N; i++) {
-        double mag = sqrt(out[i][0] * out[i][0] + out[i][1] * out[i][1]); // Magnitude of FFT output
-        double freq = i * fs / N; // Frequency bin
-        std::cout << "Frequency: " << freq << " Hz, Magnitude: " << mag << std::endl;
+    // Calculate magnitude and center the spectrum
+    std::vector<double> mag(N);
+    int halfN = N / 2;
+    for (int i = 0; i < N; ++i) {
+        int idx = (i + halfN) % N; // Centering
+        mag[idx] = sqrt(out[i][0] * out[i][0] + out[i][1] * out[i][1]) / N;
     }
+
+    // Convert magnitude to dB
+    std::vector<double> mag_dB(N);
+    for (int i = 0; i < N; ++i) {
+        mag_dB[i] = 20 * log10(mag[i]);
+    }
+
+    // Prepare frequency axis in MHz
+    std::vector<double> f(N);
+    double freq_resolution = fs / N;
+    for (int i = 0; i < N; ++i) {
+        f[i] = (i - N / 2) * freq_resolution / 1e6;
+    }
+
+    // Plot
+    plt::plot(f, mag_dB);
+    plt::xlabel("Częstotliwość [MHz]");
+    plt::ylabel("Amplituda [dB]");
+    plt::grid(true);
+    plt::xlim(f.front(), f.back());
+    plt::show();
 
     // Cleanup
     fftw_destroy_plan(p);
-    fftw_free(in); 
+    fftw_free(in);
     fftw_free(out);
-
-    for (const auto& sample : signal) {
-        std::cout << "Real: " << std::real(sample) << " Imag: " << std::imag(sample) << std::endl;
-    }
 }
 
 int main() {
