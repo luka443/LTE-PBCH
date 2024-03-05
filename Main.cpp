@@ -66,6 +66,35 @@ void plot_freq(const std::vector<std::complex<double>>& x, double fs) {
     fftw_free(out);
 }
 
+std::vector<std::complex<double>> perform_fft(const std::vector<std::complex<double>>& x) {
+    int N = x.size();
+    fftw_complex *in, *out;
+    fftw_plan p;
+    std::vector<std::complex<double>> y(N);
+
+    in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
+    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
+
+    for (int i = 0; i < N; ++i) {
+        in[i][0] = x[i].real();
+        in[i][1] = x[i].imag();
+    }
+
+    p = fftw_plan_dft_1d(N, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
+    fftw_execute(p);
+
+    for (int i = 0; i < N; ++i) {
+        y[i] = std::complex<double>(out[i][0], out[i][1]);
+    }
+
+    fftw_destroy_plan(p);
+    fftw_free(in);
+    fftw_free(out);
+
+    return y;
+}
+
+
 int main() {
     // Zmienne kontrolujące przetwarzanie sygnału
     int do_LPfilter = 0; // 0/1 - filtr dolnoprzepustowy, przepuszcza tylko używane nośniki PBCH
@@ -104,6 +133,38 @@ int main() {
     
     // Obserwacja widma sygnału
     plot_freq(signal, fs);
+
+
+    int Nfft = 2048; // Example FFT size
+    int Nfftup = static_cast<int>(Nfft * fs / fs_lte);
+    int Ncut = 16 * Nfftup;
+    std::vector<std::complex<double>> s_cut(signal.begin(), signal.begin() + std::min<int>(Ncut, signal.size()));
+
+    // Perform FFT on the cut signal
+    std::vector<std::complex<double>> S_cut = perform_fft(s_cut);
+
+    double df = fs / Nfftup;
+    std::vector<double> absS_cut(S_cut.size());
+    std::transform(S_cut.begin(), S_cut.end(), absS_cut.begin(), [](const std::complex<double>& c) { return std::abs(c); });
+
+    int kcentr = Nfftup / 2;
+    int Kmax = 20; // Search range for minimum magnitude
+    auto min_it = std::min_element(absS_cut.begin() + kcentr - Kmax, absS_cut.begin() + kcentr + Kmax);
+    int indx = std::distance(absS_cut.begin(), min_it);
+    int SHIFT = indx - kcentr;
+
+    // Apply the calculated shift to the entire signal
+    for (size_t i = 0; i < signal.size(); ++i) {
+        double phaseShift = -2 * M_PI * i * SHIFT * df / fs;
+        signal[i] *= std::exp(std::complex<double>(0, phaseShift));
+    }
+
+    // TODO: here you can insert the code for low-pass filtering if needed
+
+    // Plot the frequency spectrum of the shifted signal
+    if (true) { // Replace true with a condition to control plotting
+        plot_freq(signal, fs);
+    }
 
     // Tutaj można kontynuować przetwarzanie sygnału w języku C++
 
