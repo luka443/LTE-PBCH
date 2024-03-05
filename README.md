@@ -12,9 +12,9 @@ This C++ project analyzes the Physical Broadcast Channel (PBCH) spectrum in Long
 Running this project requires the matplotlibcpp and FFTW3 libraries. Installation instructions for these libraries on Linux systems are provided below.
 
 ### FFTW3 Installation
-```
-Download fftw3 from [fftw3](https://www.fftw.org/)
-```
+
+Download fftw3 from: [https://www.fftw.org/](https://www.fftw.org/download.html)
+
 ```
 extract .tar to folder
 ```
