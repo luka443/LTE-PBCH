@@ -1,6 +1,6 @@
 # Decoding 4G LTE Physical Broadcast Channel
 I'm using LTE signal stored here - [Data/LTE_TM3p1_10MZ](Data/LTE_TM3p1_10MZ_18p22dBFS.txt)
-## Opis projektu
+## About project
 This C++ project analyzes the Physical Broadcast Channel (PBCH) spectrum in Long Term Evolution (LTE) systems. PBCH carries essential information for mobile stations to synchronize with and gain access to the network. The program conducts several critical operations on the signal:
 ```
 
