@@ -27,3 +27,9 @@ make
 ```
 make install
 ```
+### matplotlibcpp Installation
+
+make sure to visit [matplotlibcp](https://github.com/lava/matplotlib-cpp)https://github.com/lava/matplotlib-cpp
+```
+sudo apt-get install python3-matplotlib
+```
