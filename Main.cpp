@@ -8,6 +8,7 @@
 #include <vector>
 #include <complex>
 #include <cmath>
+#include "perform_fft.h"
 
 namespace plt = matplotlibcpp;
 
@@ -15,28 +16,15 @@ namespace plt = matplotlibcpp;
 void plot_freq(const std::vector<std::complex<double>>& x, double fs) {
     int N = x.size(); // Length of the signal
 
-    // Allocate input and output arrays for FFTW
-    fftw_complex *in, *out;
-    fftw_plan p;
-    in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
-    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
-
-    // Copy our std::vector into the input array
-    for (int i = 0; i < N; ++i) {
-        in[i][0] = x[i].real();
-        in[i][1] = x[i].imag();
-    }
-
-    // Create plan and execute FFT
-    p = fftw_plan_dft_1d(N, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
-    fftw_execute(p);
+    // Perform FFT
+    std::vector<std::complex<double>> fft_result = perform_fft(x);
 
     // Calculate magnitude and center the spectrum
     std::vector<double> mag(N);
     int halfN = N / 2;
     for (int i = 0; i < N; ++i) {
         int idx = (i + halfN) % N; // Centering
-        mag[idx] = sqrt(out[i][0] * out[i][0] + out[i][1] * out[i][1]) / N;
+        mag[idx] = std::abs(fft_result[i]) / N;
     }
 
     // Convert magnitude to dB
@@ -59,40 +47,8 @@ void plot_freq(const std::vector<std::complex<double>>& x, double fs) {
     plt::grid(true);
     plt::xlim(f.front(), f.back());
     plt::show();
-
-    // Cleanup
-    fftw_destroy_plan(p);
-    fftw_free(in);
-    fftw_free(out);
 }
 
-std::vector<std::complex<double>> perform_fft(const std::vector<std::complex<double>>& x) {
-    int N = x.size();
-    fftw_complex *in, *out;
-    fftw_plan p;
-    std::vector<std::complex<double>> y(N);
-
-    in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
-    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
-
-    for (int i = 0; i < N; ++i) {
-        in[i][0] = x[i].real();
-        in[i][1] = x[i].imag();
-    }
-
-    p = fftw_plan_dft_1d(N, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
-    fftw_execute(p);
-
-    for (int i = 0; i < N; ++i) {
-        y[i] = std::complex<double>(out[i][0], out[i][1]);
-    }
-
-    fftw_destroy_plan(p);
-    fftw_free(in);
-    fftw_free(out);
-
-    return y;
-}
 
 
 int main() {
@@ -162,11 +118,11 @@ int main() {
     // TODO: here you can insert the code for low-pass filtering if needed
 
     // Plot the frequency spectrum of the shifted signal
-    if (true) { // Replace true with a condition to control plotting
-        plot_freq(signal, fs);
-    }
+  //  if (true) { // Replace true with a condition to control plotting
+   //     plot_freq(signal, fs);
+    //}
 
-    // Tutaj można kontynuować przetwarzanie sygnału w języku C++
+    // continuation ...
 
     return 0;
 }
